@@ -8,33 +8,33 @@ import (
 )
 
 type TestKit struct {
-	ID          uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Price       float64        `json:"price"`
-	Category    string         `json:"category"`
-	Stock       int            `json:"stock"`
-	ImageURL    string         `json:"image_url"`
-	Instructions string        `json:"instructions"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	ID           uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	Name         string         `json:"name"`
+	Description  string         `json:"description"`
+	Price        float64        `json:"price"`
+	Category     string         `json:"category"`
+	Stock        int            `json:"stock"`
+	ImageURL     string         `json:"image_url"`
+	Instructions string         `json:"instructions"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type TestKitOrder struct {
-	ID            uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
-	UserID        uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
-	TestKitID     uuid.UUID      `gorm:"type:uuid;not null" json:"test_kit_id"`
-	Quantity      int            `json:"quantity"`
-	TotalPrice    float64        `json:"total_price"`
-	Status        string         `json:"status"` // pending, paid, shipped, delivered, cancelled
-	PaymentStatus string         `json:"payment_status"` // pending, paid, refunded
-	PaymentMethod string         `json:"payment_method"`
-	ShippingAddress string       `json:"shipping_address"`
-	TrackingNumber string        `json:"tracking_number"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     time.Time      `json:"updated_at"`
-	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
+	ID              uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	UserID          uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
+	TestKitID       uuid.UUID      `gorm:"type:uuid;not null" json:"test_kit_id"`
+	Quantity        int            `json:"quantity"`
+	TotalPrice      float64        `json:"total_price"`
+	Status          string         `json:"status"`         // pending, paid, shipped, delivered, cancelled
+	PaymentStatus   string         `json:"payment_status"` // pending, paid, refunded
+	PaymentMethod   string         `json:"payment_method"`
+	ShippingAddress string         `json:"shipping_address"`
+	TrackingNumber  string         `json:"tracking_number"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 // TestKitResult moved to extended_models.go with enhanced fields for AI analysis
@@ -52,10 +52,3 @@ func (o *TestKitOrder) BeforeCreate(tx *gorm.DB) error {
 	}
 	return nil
 }
-
-func (r *TestKitResult) BeforeCreate(tx *gorm.DB) error {
-	if r.ID == uuid.Nil {
-		r.ID = uuid.New()
-	}
-	return nil
-} 

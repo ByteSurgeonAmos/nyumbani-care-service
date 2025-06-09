@@ -19,6 +19,8 @@ A robust, scalable backend system for Nyumbani Care's healthcare platform, built
 - Go 1.21+
 - PostgreSQL (Neon)
 - Gin Web Framework
+- Paystack Payment Gateway
+- Cloudinary for File Storage
 - GORM ORM
 - JWT Authentication
 - Paystack Payment Integration (with M-Pesa as backup)
@@ -50,11 +52,14 @@ A robust, scalable backend system for Nyumbani Care's healthcare platform, built
 
 ### Payment Processing
 
-The application uses Paystack as the primary payment processor with M-Pesa as a backup option for greater flexibility in the East African market. The payment service supports:
+The application uses Paystack as the payment processor, configured to handle payments in Kenyan Shillings (KES). The payment service supports:
 
-- Payment initialization
+- Payment initialization with secure order tracking
 - Webhook handling for asynchronous payment updates
-- Payment verification and status tracking
+- Payment verification and transaction status tracking
+- Comprehensive error handling and logging
+
+For detailed implementation notes, see [PAYSTACK_NOTES.md](docs/PAYSTACK_NOTES.md)
 
 ### File Storage
 

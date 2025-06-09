@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,21 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// @Summary Upload and analyze test kit result
-// @Description Upload test kit result image and get AI analysis
-// @Tags TestKitResults
-// @Accept multipart/form-data
-// @Produce json
-// @Param test_kit_id formData string true "Test Kit ID"
-// @Param order_id formData string false "Order ID"
-// @Param test_kit_type formData string true "Test Kit Type (e.g., 'covid', 'pregnancy', 'malaria')"
-// @Param file formData file true "Test Kit Result Image"
-// @Success 200 {object} models.TestKitResult "Test kit result analysis"
-// @Failure 400 {object} map[string]string "Bad request"
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 500 {object} map[string]string "Internal server error"
-// @Router /api/v1/test-kits/results/analyze [post]
-// @Security Bearer
 func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("user_id")
@@ -80,7 +66,7 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize storage service"})
 			return
 		}
-		
+
 		// Upload file to Cloudinary in test_results folder
 		fileURL, err := storageSvc.UploadFile(header, "test_results")
 		if err != nil {
@@ -90,13 +76,13 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 
 		// Initialize AI service
 		aiSvc := services.NewAIService(&config.GetConfig().External)
-		
+
 		// Analyze the test kit result
 		analysisReq := &services.TestKitResultRequest{
 			TestKitType: testKitType,
 			ImageURL:    fileURL,
 		}
-		
+
 		analysisResp, err := aiSvc.AnalyzeTestKitResult(analysisReq)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to analyze test kit result"})
@@ -105,16 +91,16 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 
 		// Create test kit result record
 		result := models.TestKitResult{
-			ID:              uuid.New(),
-			UserID:          userID.(uuid.UUID),
-			TestKitID:       testKitUUID,
-			ImageURL:        fileURL,
-			Result:          analysisResp.Result,
-			AIConfidence:    analysisResp.Confidence,
-			DetectedMarkers: analysisResp.DetectedMarkers,
+			ID:               uuid.New(),
+			UserID:           userID.(uuid.UUID),
+			TestKitID:        testKitUUID,
+			ImageURL:         fileURL,
+			Result:           analysisResp.Result,
+			AIConfidence:     analysisResp.Confidence,
+			DetectedMarkers:  analysisResp.DetectedMarkers,
 			RecommendedSteps: analysisResp.RecommendedSteps,
-			Notes:           analysisResp.Notes,
-			Status:          "pending", // Pending healthcare professional review
+			Notes:            analysisResp.Notes,
+			Status:           "pending", // Pending healthcare professional review
 		}
 
 		// Add order ID if provided
@@ -130,7 +116,7 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Test kit result analyzed successfully",
-			"result": result,
+			"result":  result,
 		})
 	}
 }
@@ -158,7 +144,7 @@ func GetTestKitResult(db *gorm.DB) gin.HandlerFunc {
 		var result models.TestKitResult
 
 		query := db.Preload("TestKit").Where("id = ?", resultID)
-		
+
 		// Non-admin users can only see their own results
 		role, _ := c.Get("role")
 		if role != "admin" {
@@ -199,7 +185,7 @@ func ListTestKitResults(db *gorm.DB) gin.HandlerFunc {
 
 		var results []models.TestKitResult
 		query := db.Preload("TestKit").Order("created_at DESC")
-		
+
 		// Non-admin users can only see their own results
 		role, _ := c.Get("role")
 		if role != "admin" {
@@ -256,9 +242,9 @@ func UpdateTestKitResult(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var updateData struct {
-			Result          string   `json:"result"`
-			ReviewNotes     string   `json:"review_notes"`
-			Status          string   `json:"status"`
+			Result           string   `json:"result"`
+			ReviewNotes      string   `json:"review_notes"`
+			Status           string   `json:"status"`
 			RecommendedSteps []string `json:"recommended_steps"`
 		}
 
@@ -269,9 +255,9 @@ func UpdateTestKitResult(db *gorm.DB) gin.HandlerFunc {
 
 		// Update only allowed fields
 		updates := map[string]interface{}{
-			"reviewed_by":      userID,
-			"review_notes":     updateData.ReviewNotes,
-			"status":           updateData.Status,
+			"reviewed_by":  userID,
+			"review_notes": updateData.ReviewNotes,
+			"status":       updateData.Status,
 		}
 
 		// Only update result if provided
@@ -300,14 +286,14 @@ func Paginate(c *gin.Context) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		page := c.DefaultQuery("page", "1")
 		pageSize := c.DefaultQuery("limit", "10")
-		
+
 		offset := 0
 		limit := 10
 
 		if p, err := parseInt(page); err == nil {
 			offset = (p - 1) * limit
 		}
-		
+
 		if l, err := parseInt(pageSize); err == nil {
 			limit = l
 		}

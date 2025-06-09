@@ -12,14 +12,14 @@ import (
 )
 
 type AIService struct {
-	config     *config.ExternalConfig
+	config       *config.ExternalConfig
 	openaiClient *openai.Client
 }
 
 func NewAIService(cfg *config.ExternalConfig) *AIService {
 	client := openai.NewClient(cfg.ChatGPTAPIKey)
 	return &AIService{
-		config: cfg,
+		config:       cfg,
 		openaiClient: client,
 	}
 }
@@ -32,9 +32,9 @@ type SymptomCheckRequest struct {
 
 type SymptomCheckResponse struct {
 	PossibleConditions []PossibleCondition `json:"possible_conditions"`
-	Recommendations    []string           `json:"recommendations"`
-	Urgency           string             `json:"urgency"`
-	Confidence        float64            `json:"confidence"`
+	Recommendations    []string            `json:"recommendations"`
+	Urgency            string              `json:"urgency"`
+	Confidence         float64             `json:"confidence"`
 }
 
 type PossibleCondition struct {
@@ -44,10 +44,10 @@ type PossibleCondition struct {
 }
 
 type AnalyticsRequest struct {
-	UserID       string                 `json:"user_id"`
-	DataType     string                 `json:"data_type"`
-	TimeRange    string                 `json:"time_range"`
-	Data         map[string]interface{} `json:"data"`
+	UserID    string                 `json:"user_id"`
+	DataType  string                 `json:"data_type"`
+	TimeRange string                 `json:"time_range"`
+	Data      map[string]interface{} `json:"data"`
 }
 
 type AnalyticsResponse struct {
@@ -63,26 +63,21 @@ type Trend struct {
 	Dates  []string  `json:"dates"`
 }
 
-// TestKitResultRequest represents a request to analyze a test kit result image
 type TestKitResultRequest struct {
 	TestKitType string `json:"test_kit_type"`
 	ImageURL    string `json:"image_url"`
 }
 
-// TestKitResultResponse represents the analysis of a test kit result
 type TestKitResultResponse struct {
 	Result           string   `json:"result"`           // positive, negative, inconclusive
 	Confidence       float64  `json:"confidence"`       // 0-1 confidence level
 	DetectedMarkers  []string `json:"detected_markers"` // Any markers detected in the test
 	RecommendedSteps []string `json:"recommended_steps"`
-	Notes            string   `json:"notes"` // Any additional notes or observations
+	Notes            string   `json:"notes"`
 }
-
-// Legacy function - replaced by the new one above
 
 func (ai *AIService) AnalyzeSymptoms(request SymptomCheckRequest) (*SymptomCheckResponse, error) {
 	if ai.config.ChatGPTAPIKey == "" {
-		// Return mock response for development
 		return ai.mockSymptomAnalysis(request), nil
 	}
 
@@ -90,17 +85,16 @@ func (ai *AIService) AnalyzeSymptoms(request SymptomCheckRequest) (*SymptomCheck
 	symptomsJSON, _ := json.Marshal(request.Symptoms)
 	prompt := fmt.Sprintf(
 		"I need a medical symptom analysis based on these symptoms: %s. "+
-		"The patient is a %d year old %s. "+
-		"Please provide possible conditions, recommendations, and urgency level. "+
-		"Format your response as JSON with the following structure: "+
-		"{\"possible_conditions\": [{\"name\": string, \"probability\": float, \"description\": string}], "+
-		"\"recommendations\": [string], \"urgency\": string, \"confidence\": float}",
+			"The patient is a %d year old %s. "+
+			"Please provide possible conditions, recommendations, and urgency level. "+
+			"Format your response as JSON with the following structure: "+
+			"{\"possible_conditions\": [{\"name\": string, \"probability\": float, \"description\": string}], "+
+			"\"recommendations\": [string], \"urgency\": string, \"confidence\": float}",
 		string(symptomsJSON),
 		request.Age,
 		request.Gender,
 	)
 
-	// Create ChatGPT request
 	ctx := context.Background()
 	resp, err := ai.openaiClient.CreateChatCompletion(
 		ctx,
@@ -116,14 +110,13 @@ func (ai *AIService) AnalyzeSymptoms(request SymptomCheckRequest) (*SymptomCheck
 					Content: prompt,
 				},
 			},
-			Temperature: 0.2, // Lower temperature for more consistent outputs
+			Temperature: 0.2,
 		},
 	)
 
 	if err != nil {
 		return nil, fmt.Errorf("ChatGPT API error: %v", err)
 	}
-		// Parse the response
 	var response SymptomCheckResponse
 	if err := json.Unmarshal([]byte(resp.Choices[0].Message.Content), &response); err != nil {
 		return nil, fmt.Errorf("failed to parse ChatGPT response: %v", err)
@@ -134,26 +127,23 @@ func (ai *AIService) AnalyzeSymptoms(request SymptomCheckRequest) (*SymptomCheck
 
 func (ai *AIService) GenerateHealthAnalytics(request AnalyticsRequest) (*AnalyticsResponse, error) {
 	if ai.config.ChatGPTAPIKey == "" {
-		// Return mock response for development
 		return ai.mockHealthAnalytics(request), nil
 	}
 
-	// Create data representation for GPT
 	dataJSON, _ := json.Marshal(request.Data)
 	prompt := fmt.Sprintf(
 		"Analyze the following health data for user %s over %s. Data type: %s. "+
-		"Data: %s "+
-		"Generate health insights, trends, patterns, and risk assessment. "+
-		"Format your response as JSON with the following structure: "+
-		"{\"trends\": [{\"metric\": string, \"values\": [float], \"dates\": [string]}], "+
-		"\"patterns\": [string], \"insights\": [string], \"risk_score\": float}",
+			"Data: %s "+
+			"Generate health insights, trends, patterns, and risk assessment. "+
+			"Format your response as JSON with the following structure: "+
+			"{\"trends\": [{\"metric\": string, \"values\": [float], \"dates\": [string]}], "+
+			"\"patterns\": [string], \"insights\": [string], \"risk_score\": float}",
 		request.UserID,
 		request.TimeRange,
 		request.DataType,
 		string(dataJSON),
 	)
 
-	// Create ChatGPT request
 	ctx := context.Background()
 	resp, err := ai.openaiClient.CreateChatCompletion(
 		ctx,
@@ -176,7 +166,6 @@ func (ai *AIService) GenerateHealthAnalytics(request AnalyticsRequest) (*Analyti
 	if err != nil {
 		return nil, fmt.Errorf("ChatGPT API error: %v", err)
 	}
-		// Parse the response
 	var response AnalyticsResponse
 	if err := json.Unmarshal([]byte(resp.Choices[0].Message.Content), &response); err != nil {
 		return nil, fmt.Errorf("failed to parse ChatGPT response: %v", err)
@@ -185,12 +174,9 @@ func (ai *AIService) GenerateHealthAnalytics(request AnalyticsRequest) (*Analyti
 	return &response, nil
 }
 
-// Mock implementations for development
 func (ai *AIService) mockSymptomAnalysis(request SymptomCheckRequest) *SymptomCheckResponse {
-	// Simple rule-based mock analysis
 	conditions := []PossibleCondition{}
 	urgency := "low"
-		// Basic symptom matching	
 	if contains(request.Symptoms, "fever") && contains(request.Symptoms, "cough") {
 		conditions = append(conditions, PossibleCondition{
 			Name:        "Upper Respiratory Infection",
@@ -199,7 +185,7 @@ func (ai *AIService) mockSymptomAnalysis(request SymptomCheckRequest) *SymptomCh
 		})
 		urgency = "medium"
 	}
-	
+
 	if contains(request.Symptoms, "chest pain") {
 		conditions = append(conditions, PossibleCondition{
 			Name:        "Chest Pain Syndrome",
@@ -208,7 +194,7 @@ func (ai *AIService) mockSymptomAnalysis(request SymptomCheckRequest) *SymptomCh
 		})
 		urgency = "high"
 	}
-	
+
 	if len(conditions) == 0 {
 		conditions = append(conditions, PossibleCondition{
 			Name:        "General Symptoms",
@@ -234,8 +220,8 @@ func (ai *AIService) mockSymptomAnalysis(request SymptomCheckRequest) *SymptomCh
 	return &SymptomCheckResponse{
 		PossibleConditions: conditions,
 		Recommendations:    recommendations,
-		Urgency:           urgency,
-		Confidence:        0.7,
+		Urgency:            urgency,
+		Confidence:         0.7,
 	}
 }
 
@@ -263,7 +249,7 @@ func (ai *AIService) mockHealthAnalytics(request AnalyticsRequest) *AnalyticsRes
 			"Consider maintaining current lifestyle habits",
 			"Regular monitoring is recommended",
 		},
-		RiskScore: 0.2, // Low risk
+		RiskScore: 0.2,
 	}
 }
 
@@ -276,11 +262,10 @@ func contains(slice []string, item string) bool {
 	return false
 }
 
-// Update the symptom check handler to use AI service
 func (ai *AIService) ProcessSymptomCheck(symptomCheck *models.SymptomCheck) error {
 	request := SymptomCheckRequest{
 		Symptoms: symptomCheck.Symptoms,
-		Age:      25, // Default age if not provided
+		Age:      25,
 		Gender:   "unknown",
 	}
 
@@ -289,19 +274,14 @@ func (ai *AIService) ProcessSymptomCheck(symptomCheck *models.SymptomCheck) erro
 		return err
 	}
 
-	// Update symptom check with AI results
 	conditionsJson, _ := json.Marshal(response.PossibleConditions)
-	
-	// Store the conditions as a JSON string
+
 	symptomCheck.Results = string(conditionsJson)
-	// Store first recommendation only - API compatibility
 	if len(response.Recommendations) > 0 {
 		symptomCheck.Recommendations = response.Recommendations[0]
 	}
 	symptomCheck.UrgencyLevel = response.Urgency
-	// Store additional recommendations in Results field as a JSON string
 	if len(response.Recommendations) > 1 {
-		// Append additional recommendations to the Results field
 		additionalRecommendations := strings.Join(response.Recommendations[1:], "; ")
 		symptomCheck.Results += fmt.Sprintf(", \"additional_recommendations\": \"%s\"", additionalRecommendations)
 	}
@@ -309,13 +289,11 @@ func (ai *AIService) ProcessSymptomCheck(symptomCheck *models.SymptomCheck) erro
 	return nil
 }
 
-// AnalyzeTestKitResult analyzes a test kit result image
 func (s *AIService) AnalyzeTestKitResult(req *TestKitResultRequest) (*TestKitResultResponse, error) {
 	if s.openaiClient == nil {
 		return nil, fmt.Errorf("OpenAI client not initialized")
 	}
 
-	// Create the ChatGPT prompt for analyzing the test kit result image
 	systemPrompt := "You are a medical diagnostic assistant specialized in analyzing test kit results from images. " +
 		"Provide a detailed analysis of the test kit image including: " +
 		"1. Whether the result is positive, negative, or inconclusive " +
@@ -325,7 +303,7 @@ func (s *AIService) AnalyzeTestKitResult(req *TestKitResultRequest) (*TestKitRes
 		"5. Any additional notes or observations. " +
 		"Return your analysis in JSON format that matches the TestKitResultResponse structure."
 
-	userPrompt := fmt.Sprintf("I'm analyzing a %s test kit result from this image: %s. Please interpret the result.", 
+	userPrompt := fmt.Sprintf("I'm analyzing a %s test kit result from this image: %s. Please interpret the result.",
 		req.TestKitType, req.ImageURL)
 
 	completion, err := s.openaiClient.CreateChatCompletion(
@@ -342,7 +320,7 @@ func (s *AIService) AnalyzeTestKitResult(req *TestKitResultRequest) (*TestKitRes
 					Content: userPrompt,
 				},
 			},
-			Temperature: 0.2, // Lower temperature for more deterministic results
+			Temperature: 0.2,
 			MaxTokens:   1000,
 		},
 	)
@@ -355,15 +333,12 @@ func (s *AIService) AnalyzeTestKitResult(req *TestKitResultRequest) (*TestKitRes
 		return nil, fmt.Errorf("no response from AI service")
 	}
 
-	// Parse the response
 	content := completion.Choices[0].Message.Content
-	
-	// Extract JSON from the response
+
 	jsonStr := extractJSON(content)
-	
+
 	var response TestKitResultResponse
 	if err := json.Unmarshal([]byte(jsonStr), &response); err != nil {
-		// If unmarshalling fails, return a default response with the raw content
 		return &TestKitResultResponse{
 			Result:           "inconclusive",
 			Confidence:       0.0,
@@ -376,20 +351,16 @@ func (s *AIService) AnalyzeTestKitResult(req *TestKitResultRequest) (*TestKitRes
 	return &response, nil
 }
 
-// extractJSON extracts JSON content from a string that might contain other text
 func extractJSON(content string) string {
-	// Find the start of the JSON object
 	start := strings.Index(content, "{")
 	if start == -1 {
 		return "{}"
 	}
 
-	// Find the end of the JSON object
 	end := strings.LastIndex(content, "}")
 	if end == -1 || end < start {
 		return "{}"
 	}
 
-	// Extract the JSON part
 	return content[start : end+1]
 }

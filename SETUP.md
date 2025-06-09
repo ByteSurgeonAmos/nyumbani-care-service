@@ -75,14 +75,8 @@ EMAIL_FROM=Nyumbani Care <notifications@yourdomain.com>
 # Paystack payment integration
 PAYSTACK_SECRET_KEY=sk_test_your_paystack_secret_key
 PAYSTACK_PUBLIC_KEY=pk_test_your_paystack_public_key
-PAYSTACK_CALLBACK_URL=https://yourdomain.com/api/payments/paystack/callback
-
-# M-Pesa configuration (backup payment method)
-MPESA_CONSUMER_KEY=your_consumer_key
-MPESA_CONSUMER_SECRET=your_consumer_secret
-MPESA_PASSKEY=your_passkey
-MPESA_SHORT_CODE=your_short_code
-MPESA_CALLBACK_URL=https://yourdomain.com/api/payments/mpesa/callback
+PAYSTACK_CALLBACK_URL=https://yourdomain.com/api/v1/payments/paystack/callback
+PAYSTACK_WEBHOOK_URL=https://yourdomain.com/api/webhooks/paystack
 
 # OpenAI/ChatGPT configuration
 OPENAI_API_KEY=your_openai_api_key
@@ -173,10 +167,9 @@ go run cmd/api/main.go
 
 #### Payments
 
-- `POST /api/v1/payments/paystack` - Process Paystack payment (primary)
+- `POST /api/v1/payments/paystack` - Process Paystack payment
 - `GET /api/v1/payments/paystack/callback` - Paystack payment callback handler
 - `POST /api/webhooks/paystack` - Paystack webhook handler
-- `POST /api/v1/payments/mpesa` - Process M-Pesa payment (backup)
 - `GET /api/v1/payments` - List user payments
 - `GET /api/v1/payments/:id` - Get payment status
 
@@ -201,7 +194,7 @@ go run cmd/api/main.go
 
 ### Webhooks
 
-- `POST /api/v1/webhooks/mpesa` - M-Pesa payment callback
+- `POST /api/webhooks/paystack` - Paystack webhook handler
 
 ## Features Implemented
 

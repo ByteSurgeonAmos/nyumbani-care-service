@@ -57,7 +57,7 @@ func RegisterUser(db *gorm.DB) gin.HandlerFunc {
 			PhoneNumber: req.PhoneNumber,
 			Gender:      req.Gender,
 			Address:     req.Address,
-			Role:        "patient", // Default role
+			Role:        "patient",
 		}
 
 		if err := db.Create(&user).Error; err != nil {
@@ -148,4 +148,4 @@ func RefreshToken(db *gorm.DB) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{"token": token})
 	}
-} 
+}
