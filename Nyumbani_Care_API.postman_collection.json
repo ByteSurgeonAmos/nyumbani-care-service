@@ -1,0 +1,1588 @@
+{
+  "info": {
+    "_postman_id": "nyumbani-care-api-collection",
+    "name": "Nyumbani Care API",
+    "description": "Complete API collection for Nyumbani Care Healthcare Platform\n\n## Authentication\nMost endpoints require JWT authentication. After login, copy the JWT token from the response and add it to the Authorization header as 'Bearer {token}' for protected endpoints.\n\n## Base URL\n{{baseUrl}} - Set this variable to your API base URL (e.g., http://localhost:8080)\n\n## Environment Variables\n- baseUrl: API base URL\n- jwt_token: JWT token from login response\n- user_id: Current user ID\n- admin_token: Admin JWT token",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API Documentation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api-docs"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.environment.set('jwt_token', response.token);",
+                  "        pm.environment.set('user_id', response.user.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"full_name\": \"John Doe\",\n  \"phone_number\": \"+254700000000\",\n  \"date_of_birth\": \"1990-01-01\",\n  \"gender\": \"male\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.environment.set('jwt_token', response.token);",
+                  "        pm.environment.set('user_id', response.user.id);",
+                  "        if (response.user.role === 'admin') {",
+                  "            pm.environment.set('admin_token', response.token);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Doe Updated\",\n  \"phone_number\": \"+254700000001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Test Kits",
+      "item": [
+        {
+          "name": "List Test Kits (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-kits",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-kits"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Test Kit Details (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-kits/{{test_kit_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-kits", "{{test_kit_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Test Kit Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"test_kit_id\": \"test-kit-uuid\",\n  \"quantity\": 1,\n  \"shipping_address\": \"123 Main St, Nairobi, Kenya\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List User Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{order_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "{{order_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\",\n  \"tracking_number\": \"TRK123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{order_id}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", "{{order_id}}", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Test Kit Results",
+      "item": [
+        {
+          "name": "Upload and Analyze Test Kit Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "test_kit_id",
+                  "value": "test-kit-uuid",
+                  "type": "text"
+                },
+                {
+                  "key": "order_id",
+                  "value": "order-uuid",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-kits/results/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-kits", "results", "analyze"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Test Kit Results",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-kits/results?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-kits", "results"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Test Kit Result",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-kits/results/{{result_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-kits", "results", "{{result_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Test Kit Result (Healthcare Professional)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"result\": \"positive\",\n  \"review_notes\": \"Confirmed positive result, recommend follow-up\",\n  \"status\": \"reviewed\",\n  \"recommended_steps\": [\"Schedule follow-up appointment\", \"Monitor symptoms\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-kits/results/{{result_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-kits", "results", "{{result_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Medical Records",
+      "item": [
+        {
+          "name": "List Medical Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/medical-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "medical-records"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Medical Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blood_type\": \"O+\",\n  \"allergies\": [\"Penicillin\", \"Peanuts\"],\n  \"chronic_conditions\": [\"Hypertension\"],\n  \"family_history\": \"History of diabetes in family\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/medical-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "medical-records"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medical Record",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/medical-records/{{record_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "medical-records", "{{record_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Medical Record",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blood_type\": \"A+\",\n  \"allergies\": [\"Penicillin\"],\n  \"chronic_conditions\": [\"Hypertension\", \"Diabetes Type 2\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/medical-records/{{record_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "medical-records", "{{record_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"test_result_ready\",\n  \"title\": \"Test Results Available\",\n  \"message\": \"Your test results are now available for review\",\n  \"metadata\": {\n    \"test_result_id\": \"result-uuid\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notification_id}}/read",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "read-all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Notification Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/unread/count",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notifications", "unread", "count"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Prescriptions",
+      "item": [
+        {
+          "name": "Upload Prescription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "doctor_id",
+                  "value": "doctor-uuid",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "Prescription for ongoing treatment",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/prescriptions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "prescriptions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Prescriptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/prescriptions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "prescriptions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Prescription Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"pharmacy_notes\": \"Prescription verified and approved for dispensing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/prescriptions/{{prescription_id}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "v1",
+                "prescriptions",
+                "{{prescription_id}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Lab Tests & Bookings",
+      "item": [
+        {
+          "name": "List Available Lab Tests (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/lab-tests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "lab-tests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lab Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lab_test_id\": \"lab-test-uuid\",\n  \"booking_date\": \"2025-07-01\",\n  \"preferred_time\": \"10:00 AM\",\n  \"sample_collection_method\": \"home_collection\",\n  \"address\": \"123 Main St, Nairobi, Kenya\",\n  \"contact_number\": \"+254700000000\",\n  \"special_instructions\": \"Please call before arrival\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/lab-bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "lab-bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Lab Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/lab-bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "lab-bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lab Booking Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"sample_collected\",\n  \"tracking_number\": \"LAB123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/lab-bookings/{{booking_id}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "lab-bookings", "{{booking_id}}", "status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Telehealth",
+      "item": [
+        {
+          "name": "Create Telehealth Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider_id\": \"doctor-uuid\",\n  \"provider_type\": \"doctor\",\n  \"session_type\": \"video\",\n  \"scheduled_at\": \"2025-07-01T10:00:00Z\",\n  \"duration\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/telehealth/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "telehealth", "sessions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Telehealth Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/telehealth/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "telehealth", "sessions"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Symptom Checker",
+      "item": [
+        {
+          "name": "Check Symptoms",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symptoms\": [\"fever\", \"cough\", \"headache\"],\n  \"severity\": \"moderate\",\n  \"duration\": \"3 days\",\n  \"age\": 30,\n  \"gender\": \"male\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/symptoms/check",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "symptoms", "check"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Symptom Check History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/symptoms/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "symptoms", "history"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "CareSense Analytics",
+      "item": [
+        {
+          "name": "Generate Health Trends Analytics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"analysis_type\": \"health_trends\",\n  \"time_range\": \"3m\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/caresense/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "caresense", "analytics"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Risk Assessment Analytics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"analysis_type\": \"risk_assessment\",\n  \"time_range\": \"6m\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/caresense/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "caresense", "analytics"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Wellness Score Analytics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"analysis_type\": \"wellness_score\",\n  \"time_range\": \"1y\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/caresense/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "caresense", "analytics"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Comprehensive Analytics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"analysis_type\": \"comprehensive\",\n  \"time_range\": \"6m\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/caresense/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "caresense", "analytics"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Analytics Results",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/caresense/analytics?type=health_trends",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "caresense", "analytics"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "health_trends"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Education",
+      "item": [
+        {
+          "name": "List Health Articles (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health-education/articles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health-education", "articles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Health Article (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health-education/articles/{{article_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "v1",
+                "health-education",
+                "articles",
+                "{{article_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Process Paystack Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"currency\": \"KES\",\n  \"email\": \"user@example.com\",\n  \"reference_id\": \"order-uuid\",\n  \"callback_url\": \"https://yourapp.com/payment/callback\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/paystack",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "paystack"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paystack Payment Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/paystack/callback?trxref={{transaction_reference}}&reference={{reference}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "paystack", "callback"],
+              "query": [
+                {
+                  "key": "trxref",
+                  "value": "{{transaction_reference}}"
+                },
+                {
+                  "key": "reference",
+                  "value": "{{reference}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List User Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/{{payment_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "{{payment_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "File Uploads",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "folder",
+                  "value": "test_results",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/uploads/file",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "uploads", "file"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Paystack Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-paystack-signature",
+                "value": "webhook-signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"charge.success\",\n  \"data\": {\n    \"id\": 123456789,\n    \"domain\": \"test\",\n    \"status\": \"success\",\n    \"reference\": \"order-uuid\",\n    \"amount\": 500000,\n    \"currency\": \"KES\",\n    \"paid_at\": \"2025-06-23T10:30:00.000Z\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/paystack",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "paystack"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Endpoints",
+      "item": [
+        {
+          "name": "List All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Test Kit (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"COVID-19 Rapid Test\",\n  \"description\": \"Quick and accurate COVID-19 antigen test\",\n  \"price\": 1500.00,\n  \"category\": \"infectious_disease\",\n  \"instructions\": \"Follow the step-by-step instructions included in the package\",\n  \"available\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/test-kits",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "test-kits"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Test Kit (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"COVID-19 Rapid Test Updated\",\n  \"price\": 1200.00,\n  \"available\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/test-kits/{{test_kit_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "test-kits", "{{test_kit_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Test Kit (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/test-kits/{{test_kit_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "test-kits", "{{test_kit_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lab Test (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Complete Blood Count (CBC)\",\n  \"description\": \"Comprehensive blood analysis\",\n  \"price\": 2500.00,\n  \"category\": \"blood_tests\",\n  \"sample_type\": \"blood\",\n  \"preparation_instructions\": \"Fast for 12 hours before test\",\n  \"turnaround_time\": \"24-48 hours\",\n  \"available\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/lab-tests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "lab-tests"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lab Test (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 2000.00,\n  \"turnaround_time\": \"24 hours\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/lab-tests/{{lab_test_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "lab-tests", "{{lab_test_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Lab Test (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/lab-tests/{{lab_test_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "lab-tests", "{{lab_test_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Health Article (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Understanding Diabetes: A Complete Guide\",\n  \"content\": \"Diabetes is a chronic condition that affects how your body processes blood sugar...\",\n  \"summary\": \"A comprehensive guide to understanding diabetes, its symptoms, and management strategies.\",\n  \"category\": \"chronic_conditions\",\n  \"tags\": [\"diabetes\", \"chronic_disease\", \"health_management\"],\n  \"author\": \"Dr. Jane Smith\",\n  \"published\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/health-articles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "health-articles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Health Article (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Understanding Diabetes: Updated Complete Guide\",\n  \"published\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/health-articles/{{article_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "health-articles",
+                "{{article_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Health Article (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/health-articles/{{article_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "health-articles",
+                "{{article_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_kit_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "result_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "record_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prescription_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lab_test_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "article_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "transaction_reference",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reference",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
