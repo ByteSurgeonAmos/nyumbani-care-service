@@ -12,13 +12,11 @@ import (
 	"github.com/nyumbanicare/internal/config"
 )
 
-// StorageService handles file uploads and retrievals
 type StorageService struct {
 	config     *config.StorageConfig
 	cloudinary *cloudinary.Cloudinary
 }
 
-// NewStorageService creates a new storage service
 func NewStorageService(cfg *config.StorageConfig) (*StorageService, error) {
 	service := &StorageService{
 		config: cfg,

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,20 +11,38 @@ import (
 	"gorm.io/gorm"
 )
 
-// User handlers
 func GetCurrentUser(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, exists := c.Get("user_id")
+		userIDStr, exists := c.Get("user_id")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			return
 		}
 
+		var userID uuid.UUID
+		var err error
+
+		switch v := userIDStr.(type) {
+		case string:
+			userID, err = uuid.Parse(v)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+				return
+			}
+		case uuid.UUID:
+			userID = v
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
+			return
+		}
 		var user models.User
-		if err := db.Preload("MedicalRecord").First(&user, "id = ?", userID).Error; err != nil {
+		fmt.Printf("DEBUG: Looking for user with ID: %s\n", userID.String())
+		if err := db.First(&user, "id = ?", userID).Error; err != nil {
+			fmt.Printf("DEBUG: Database error: %v\n", err)
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}
+		fmt.Printf("DEBUG: Found user: %s (%s)\n", user.Email, user.ID.String())
 
 		c.JSON(http.StatusOK, user)
 	}
@@ -31,9 +50,26 @@ func GetCurrentUser(db *gorm.DB) gin.HandlerFunc {
 
 func UpdateUser(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, exists := c.Get("user_id")
+		userIDStr, exists := c.Get("user_id")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			return
+		}
+
+		var userID uuid.UUID
+		var err error
+
+		switch v := userIDStr.(type) {
+		case string:
+			userID, err = uuid.Parse(v)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+				return
+			}
+		case uuid.UUID:
+			userID = v
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
 			return
 		}
 
@@ -69,7 +105,6 @@ func UpdateUser(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Test Kit handlers
 func ListTestKits(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var testKits []models.TestKit
@@ -147,7 +182,6 @@ func DeleteTestKit(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Order handlers
 func CreateTestKitOrder(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("user_id")
@@ -196,7 +230,6 @@ func CreateTestKitOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Update stock
 		testKit.Stock -= req.Quantity
 		db.Save(&testKit)
 
@@ -211,9 +244,8 @@ func ListUserOrders(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			return
 		}
-
 		var orders []models.TestKitOrder
-		if err := db.Preload("TestKit").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+		if err := db.Where("user_id = ?", userID).Find(&orders).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 			return
 		}
@@ -233,8 +265,7 @@ func GetOrder(db *gorm.DB) gin.HandlerFunc {
 		id := c.Param("id")
 		var order models.TestKitOrder
 		query := db.Preload("TestKit").Where("id = ?", id)
-		
-		// Non-admin users can only see their own orders
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("user_id = ?", userID)
@@ -282,7 +313,6 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Medical Record handlers
 func ListMedicalRecords(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("user_id")
@@ -293,8 +323,7 @@ func ListMedicalRecords(db *gorm.DB) gin.HandlerFunc {
 
 		var records []models.MedicalRecord
 		query := db.Preload("Medications").Preload("TestResults").Preload("Consultations")
-		
-		// Non-admin users can only see their own records
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("user_id = ?", userID)
@@ -320,8 +349,7 @@ func GetMedicalRecord(db *gorm.DB) gin.HandlerFunc {
 		id := c.Param("id")
 		var record models.MedicalRecord
 		query := db.Preload("Medications").Preload("TestResults").Preload("Consultations").Where("id = ?", id)
-		
-		// Non-admin users can only see their own records
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("user_id = ?", userID)
@@ -372,8 +400,7 @@ func UpdateMedicalRecord(db *gorm.DB) gin.HandlerFunc {
 		id := c.Param("id")
 		var record models.MedicalRecord
 		query := db.Where("id = ?", id)
-		
-		// Non-admin users can only update their own records
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("user_id = ?", userID)
@@ -398,7 +425,6 @@ func UpdateMedicalRecord(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Test Result handlers
 func CreateTestResult(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var result models.TestKitResult
@@ -423,11 +449,9 @@ func ListTestResults(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			return
 		}
-
 		var results []models.TestKitResult
-		query := db.Preload("TestKit").Preload("Order")
-		
-		// Non-admin users can only see their own results
+		query := db
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("user_id = ?", userID)
@@ -449,12 +473,10 @@ func GetTestResult(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			return
 		}
-
 		id := c.Param("id")
 		var result models.TestKitResult
-		query := db.Preload("TestKit").Preload("Order").Where("id = ?", id)
-		
-		// Non-admin users can only see their own results
+		query := db.Where("id = ?", id)
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("user_id = ?", userID)
@@ -492,7 +514,6 @@ func UpdateTestResult(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Consultation handlers
 func CreateConsultation(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var consultation models.Consultation
@@ -521,8 +542,7 @@ func ListConsultations(db *gorm.DB) gin.HandlerFunc {
 		var consultations []models.Consultation
 		query := db.Table("consultations").
 			Joins("JOIN medical_records ON consultations.medical_record_id = medical_records.id")
-		
-		// Non-admin users can only see their own consultations
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("medical_records.user_id = ?", userID)
@@ -550,8 +570,7 @@ func GetConsultation(db *gorm.DB) gin.HandlerFunc {
 		query := db.Table("consultations").
 			Joins("JOIN medical_records ON consultations.medical_record_id = medical_records.id").
 			Where("consultations.id = ?", id)
-		
-		// Non-admin users can only see their own consultations
+
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("medical_records.user_id = ?", userID)
@@ -589,7 +608,6 @@ func UpdateConsultation(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Admin handlers
 func ListUsers(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -624,7 +642,7 @@ func ListAllOrders(db *gorm.DB) gin.HandlerFunc {
 		var total int64
 
 		db.Model(&models.TestKitOrder{}).Count(&total)
-		if err := db.Preload("User").Preload("TestKit").Limit(limit).Offset(offset).Find(&orders).Error; err != nil {
+		if err := db.Limit(limit).Offset(offset).Find(&orders).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 			return
 		}

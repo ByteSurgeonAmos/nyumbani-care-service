@@ -8,7 +8,7 @@ import (
 )
 
 type TestKit struct {
-	ID           uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID           uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	Name         string         `json:"name"`
 	Description  string         `json:"description"`
 	Price        float64        `json:"price"`
@@ -22,7 +22,7 @@ type TestKit struct {
 }
 
 type TestKitOrder struct {
-	ID              uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID              uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID          uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	TestKitID       uuid.UUID      `gorm:"type:uuid;not null" json:"test_kit_id"`
 	Quantity        int            `json:"quantity"`
@@ -40,15 +40,35 @@ type TestKitOrder struct {
 // TestKitResult moved to extended_models.go with enhanced fields for AI analysis
 
 func (t *TestKit) BeforeCreate(tx *gorm.DB) error {
+	// Generate a new UUID if one is not provided
 	if t.ID == uuid.Nil {
 		t.ID = uuid.New()
 	}
+
+	// Set default timestamps if not provided
+	if t.CreatedAt.IsZero() {
+		t.CreatedAt = time.Now()
+	}
+	if t.UpdatedAt.IsZero() {
+		t.UpdatedAt = time.Now()
+	}
+
 	return nil
 }
 
 func (o *TestKitOrder) BeforeCreate(tx *gorm.DB) error {
+	// Generate a new UUID if one is not provided
 	if o.ID == uuid.Nil {
 		o.ID = uuid.New()
 	}
+
+	// Set default timestamps if not provided
+	if o.CreatedAt.IsZero() {
+		o.CreatedAt = time.Now()
+	}
+	if o.UpdatedAt.IsZero() {
+		o.UpdatedAt = time.Now()
+	}
+
 	return nil
 }

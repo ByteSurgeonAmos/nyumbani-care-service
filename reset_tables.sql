@@ -1,0 +1,23 @@
+-- Reset database tables
+DROP TABLE IF EXISTS health_articles CASCADE;
+
+DROP TABLE IF EXISTS consultations CASCADE;
+
+DROP TABLE IF EXISTS test_results CASCADE;
+
+DROP TABLE IF EXISTS medications CASCADE;
+
+DROP TABLE IF EXISTS medical_records CASCADE;
+
+DROP TABLE IF EXISTS test_kit_orders CASCADE;
+
+DROP TABLE IF EXISTS payments CASCADE;
+
+DROP TABLE IF EXISTS test_kits CASCADE;
+
+DROP TABLE IF EXISTS notifications CASCADE;
+
+DROP TABLE IF EXISTS users CASCADE;
+
+-- Ensure UUID extension is available
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

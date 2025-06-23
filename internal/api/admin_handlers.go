@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Admin Lab Test handlers
 func CreateLabTest(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var labTest models.LabTest
@@ -62,7 +61,6 @@ func DeleteLabTest(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Admin Health Article handlers
 func CreateHealthArticle(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("user_id")

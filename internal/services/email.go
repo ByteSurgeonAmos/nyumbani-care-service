@@ -46,30 +46,30 @@ func (es *EmailService) sendViaSMTP(data EmailData) error {
 	m.SetHeader("From", fmt.Sprintf("%s <%s>", es.config.FromName, es.config.FromEmail))
 	m.SetHeader("To", data.To)
 	m.SetHeader("Subject", data.Subject)
-	
+
 	if data.Type == "html" {
 		m.SetBody("text/html", data.Content)
 	} else {
 		m.SetBody("text/plain", data.Content)
 	}
-	
+
 	port, err := strconv.Atoi(es.config.SMTPPort)
 	if err != nil {
 		port = 587 // Default to 587 if port is invalid
 	}
-	
+
 	d := gomail.NewDialer(es.config.SMTPHost, port, es.config.SMTPUser, es.config.SMTPPass)
-	
+
 	// Send the email
 	if err := d.DialAndSend(m); err != nil {
 		return fmt.Errorf("failed to send email via SMTP: %v", err)
 	}
-	
+
 	return nil
 }
 
 func (es *EmailService) sendViaSendGrid(data EmailData) error {
-	if es.config.APIKey == ""{
+	if es.config.APIKey == "" {
 		fmt.Printf("SendGrid API key not configured. Email to %s: %s\n", data.To, data.Subject)
 		return nil
 	}
@@ -96,7 +96,7 @@ func (es *EmailService) sendViaSendGrid(data EmailData) error {
 	}
 
 	jsonPayload, _ := json.Marshal(payload)
-	
+
 	req, err := http.NewRequest("POST", "https://api.sendgrid.com/v3/mail/send", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return err
@@ -133,9 +133,9 @@ func (es *EmailService) SendAppointmentConfirmation(user models.User, session mo
 		</ul>
 		<p>You will receive a link to join the session 15 minutes before the appointment.</p>
 		<p>Best regards,<br>Nyumbani Care Team</p>
-	`, user.FirstName, session.ScheduledAt.Format("January 2, 2006 at 3:04 PM"), 
-	   session.ScheduledAt.Format("January 2, 2006 at 3:04 PM"), 
-	   session.SessionType, session.Duration)
+	`, user.FirstName, session.ScheduledAt.Format("January 2, 2006 at 3:04 PM"),
+		session.ScheduledAt.Format("January 2, 2006 at 3:04 PM"),
+		session.SessionType, session.Duration)
 
 	return es.SendEmail(EmailData{
 		To:      user.Email,
@@ -152,12 +152,12 @@ func (es *EmailService) SendTestResultsReady(user models.User, testResult models
 		<p>Your test results are now available in your Nyumbani Care account.</p>
 		<p><strong>Test Details:</strong></p>
 		<ul>
-			<li>Test: %s</li>
+			<li>Result ID: %s</li>
 			<li>Date Processed: %s</li>
 		</ul>
 		<p>Please log in to your account to view your complete results.</p>
 		<p>Best regards,<br>Nyumbani Care Team</p>
-	`, user.FirstName, testResult.TestKit.Name, testResult.UpdatedAt.Format("January 2, 2006"))
+	`, user.FirstName, testResult.ID.String(), testResult.UpdatedAt.Format("January 2, 2006"))
 
 	return es.SendEmail(EmailData{
 		To:      user.Email,

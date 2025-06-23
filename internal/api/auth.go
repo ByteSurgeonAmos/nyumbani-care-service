@@ -1,7 +1,9 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -34,43 +36,48 @@ func RegisterUser(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Check if user already exists
 		var existingUser models.User
 		if err := db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
 			c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
 			return
 		}
 
-		// Hash password
 		hashedPassword, err := utils.HashPassword(req.Password)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password"})
 			return
 		}
-
-		// Create user
+		dateOfBirth, err := time.Parse("2006-01-02", req.DateOfBirth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date of birth format. Use YYYY-MM-DD"})
+			return
+		}
 		user := models.User{
+			ID:          uuid.New(),
 			Email:       req.Email,
 			Password:    hashedPassword,
 			FirstName:   req.FirstName,
 			LastName:    req.LastName,
 			PhoneNumber: req.PhoneNumber,
+			DateOfBirth: &dateOfBirth,
 			Gender:      req.Gender,
 			Address:     req.Address,
 			Role:        "patient",
 		}
 
+		fmt.Printf("DEBUG: Creating user with ID: %s\n", user.ID.String())
 		if err := db.Create(&user).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 			return
 		}
+		fmt.Printf("DEBUG: User created with ID: %s\n", user.ID.String())
 
-		// Generate token
 		token, err := utils.GenerateToken(user.ID, user.Role)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 			return
 		}
+		fmt.Printf("DEBUG: Generated token for user ID: %s\n", user.ID.String())
 
 		c.JSON(http.StatusCreated, gin.H{
 			"token": token,
@@ -93,20 +100,17 @@ func LoginUser(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Find user
 		var user models.User
 		if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
-		// Check password
 		if !utils.CheckPasswordHash(req.Password, user.Password) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
 
-		// Generate token
 		token, err := utils.GenerateToken(user.ID, user.Role)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})

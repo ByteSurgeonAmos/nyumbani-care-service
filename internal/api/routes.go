@@ -74,10 +74,19 @@ func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 
 		records := protected.Group("/medical-records")
 		{
-			records.GET("", ListMedicalRecords(db))
-			records.GET("/:id", GetMedicalRecord(db))
-			records.POST("", CreateMedicalRecord(db))
-			records.PUT("/:id", UpdateMedicalRecord(db))
+			records.GET("", ListMedicalRecordsHandler(db))
+			records.GET("/:id", GetMedicalRecordHandler(db))
+			records.POST("", CreateMedicalRecordHandler(db))
+			records.PUT("/:id", UpdateMedicalRecordHandler(db))
+		}
+		notifications := protected.Group("/notifications")
+		{
+			notifications.GET("", GetUserNotifications(db))
+			notifications.POST("", CreateNotification(db))
+			notifications.PUT("/:id/read", MarkNotificationAsRead(db))
+			notifications.PUT("/read-all", MarkAllNotificationsAsRead(db))
+			notifications.GET("/unread/count", GetUnreadNotificationCount(db))
+			notifications.POST("/email", SendEmailNotification(db))
 		}
 
 		orders := protected.Group("/orders")

@@ -20,7 +20,6 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Get parameters
 		testKitID := c.PostForm("test_kit_id")
 		orderID := c.PostForm("order_id")
 		testKitType := c.PostForm("test_kit_type")
@@ -30,7 +29,6 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Parse UUIDs
 		testKitUUID, err := uuid.Parse(testKitID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid test kit ID"})
@@ -46,7 +44,6 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
-		// Get uploaded file
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
@@ -54,30 +51,25 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 		}
 		defer file.Close()
 
-		// Validate file type and size
-		if header.Size > 10*1024*1024 { // 10MB limit
+		if header.Size > 10*1024*1024 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "File too large (max 10MB)"})
 			return
 		}
 
-		// Create storage service for Cloudinary
 		storageSvc, err := services.NewStorageService(&config.GetConfig().Storage)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize storage service"})
 			return
 		}
 
-		// Upload file to Cloudinary in test_results folder
 		fileURL, err := storageSvc.UploadFile(header, "test_results")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file"})
 			return
 		}
 
-		// Initialize AI service
 		aiSvc := services.NewAIService(&config.GetConfig().External)
 
-		// Analyze the test kit result
 		analysisReq := &services.TestKitResultRequest{
 			TestKitType: testKitType,
 			ImageURL:    fileURL,
@@ -89,7 +81,6 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Create test kit result record
 		result := models.TestKitResult{
 			ID:               uuid.New(),
 			UserID:           userID.(uuid.UUID),
@@ -100,18 +91,20 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 			DetectedMarkers:  analysisResp.DetectedMarkers,
 			RecommendedSteps: analysisResp.RecommendedSteps,
 			Notes:            analysisResp.Notes,
-			Status:           "pending", // Pending healthcare professional review
+			Status:           "pending",
 		}
 
-		// Add order ID if provided
 		if orderID != "" {
 			result.OrderID = orderUUID
 		}
-
 		// Save to database
 		if err := db.Create(&result).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save test kit result"})
 			return
+		}
+
+		if err := NotifyTestResultReady(db, userID.(uuid.UUID), &result); err != nil {
+			fmt.Printf("Failed to create test result notification: %v\n", err)
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -121,17 +114,6 @@ func UploadAndAnalyzeTestKitResult(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// @Summary Get test kit result by ID
-// @Description Get a specific test kit result by ID
-// @Tags TestKitResults
-// @Produce json
-// @Param id path string true "Test Kit Result ID"
-// @Success 200 {object} models.TestKitResult "Test kit result"
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 404 {object} map[string]string "Not found"
-// @Failure 500 {object} map[string]string "Internal server error"
-// @Router /api/v1/test-kits/results/{id} [get]
-// @Security Bearer
 func GetTestKitResult(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("user_id")
@@ -139,13 +121,11 @@ func GetTestKitResult(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			return
 		}
-
 		resultID := c.Param("id")
 		var result models.TestKitResult
 
-		query := db.Preload("TestKit").Where("id = ?", resultID)
+		query := db.Where("id = ?", resultID)
 
-		// Non-admin users can only see their own results
 		role, _ := c.Get("role")
 		if role != "admin" {
 			query = query.Where("user_id = ?", userID)
@@ -182,9 +162,9 @@ func ListTestKitResults(db *gorm.DB) gin.HandlerFunc {
 		// Pagination parameters
 		page, _ := c.GetQuery("page")
 		limit, _ := c.GetQuery("limit")
-
 		var results []models.TestKitResult
-		query := db.Preload("TestKit").Order("created_at DESC")
+		// Removed Preload since relationships are temporarily disabled
+		query := db.Order("created_at DESC")
 
 		// Non-admin users can only see their own results
 		role, _ := c.Get("role")

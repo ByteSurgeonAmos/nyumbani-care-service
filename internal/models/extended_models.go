@@ -8,7 +8,7 @@ import (
 )
 
 type Prescription struct {
-	ID            uuid.UUID                `gorm:"type:uuid;primary_key" json:"id"`
+	ID            uuid.UUID                `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID        uuid.UUID                `gorm:"type:uuid;not null" json:"user_id"`
 	DoctorID      uuid.UUID                `gorm:"type:uuid;not null" json:"doctor_id"`
 	ImageURL      string                   `json:"image_url"`
@@ -24,7 +24,7 @@ type Prescription struct {
 }
 
 type PrescriptionMedication struct {
-	ID             uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID             uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	PrescriptionID uuid.UUID      `gorm:"type:uuid;not null" json:"prescription_id"`
 	Name           string         `json:"name"`
 	Dosage         string         `json:"dosage"`
@@ -39,7 +39,7 @@ type PrescriptionMedication struct {
 }
 
 type LabTest struct {
-	ID                      uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID                      uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	Name                    string         `json:"name"`
 	Description             string         `json:"description"`
 	Price                   float64        `json:"price"`
@@ -54,7 +54,7 @@ type LabTest struct {
 }
 
 type LabBooking struct {
-	ID                     uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID                     uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID                 uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	LabTestID              uuid.UUID      `gorm:"type:uuid;not null" json:"lab_test_id"`
 	BookingDate            time.Time      `json:"booking_date"`
@@ -75,7 +75,7 @@ type LabBooking struct {
 }
 
 type LabResult struct {
-	ID              uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID              uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	LabBookingID    uuid.UUID      `gorm:"type:uuid;not null" json:"lab_booking_id"`
 	UserID          uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	ResultData      string         `json:"result_data"` // JSON string with test values
@@ -94,7 +94,7 @@ type LabResult struct {
 
 // Health Education models
 type HealthArticle struct {
-	ID        uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID        uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	Title     string         `json:"title"`
 	Content   string         `json:"content"`
 	Summary   string         `json:"summary"`
@@ -109,11 +109,26 @@ type HealthArticle struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-	Author    User           `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
+	// Author    User           `gorm:"foreignKey:AuthorID" json:"author,omitempty"` // Temporarily disabled for migration
+}
+
+// BeforeCreate sets the ID and timestamps for a HealthArticle
+func (a *HealthArticle) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == uuid.Nil {
+		a.ID = uuid.New()
+	}
+
+	if a.CreatedAt.IsZero() {
+		a.CreatedAt = time.Now()
+	}
+	if a.UpdatedAt.IsZero() {
+		a.UpdatedAt = time.Now()
+	}
+	return nil
 }
 
 type HealthQuiz struct {
-	ID           uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID           uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	Title        string         `json:"title"`
 	Description  string         `json:"description"`
 	Category     string         `json:"category"`
@@ -127,7 +142,7 @@ type HealthQuiz struct {
 }
 
 type QuizQuestion struct {
-	ID            uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID            uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	QuizID        uuid.UUID      `gorm:"type:uuid;not null" json:"quiz_id"`
 	Question      string         `json:"question"`
 	Options       []string       `gorm:"type:text[]" json:"options"`
@@ -140,7 +155,7 @@ type QuizQuestion struct {
 }
 
 type TelehealthSession struct {
-	ID            uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID            uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	PatientID     uuid.UUID      `gorm:"type:uuid;not null" json:"patient_id"`
 	ProviderID    uuid.UUID      `gorm:"type:uuid;not null" json:"provider_id"`
 	ProviderType  string         `json:"provider_type"` // doctor, nurse, pharmacist
@@ -162,7 +177,7 @@ type TelehealthSession struct {
 }
 
 type SymptomCheck struct {
-	ID               uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID               uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID           uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	Symptoms         []string       `gorm:"type:text[]" json:"symptoms"`
 	Severity         string         `json:"severity"` // mild, moderate, severe
@@ -180,7 +195,7 @@ type SymptomCheck struct {
 }
 
 type CareSenseAnalytics struct {
-	ID              uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID              uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID          uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	AnalysisType    string         `json:"analysis_type"` // health_trends, risk_assessment, wellness_score
 	DataSource      string         `json:"data_source"`   // test_results, consultations, symptoms, etc.
@@ -197,7 +212,7 @@ type CareSenseAnalytics struct {
 }
 
 type Payment struct {
-	ID            uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID            uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	OrderID       uuid.UUID      `gorm:"type:uuid;not null" json:"order_id"`
 	UserID        uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	Amount        float64        `json:"amount"`
@@ -214,7 +229,7 @@ type Payment struct {
 }
 
 type TestKitResult struct {
-	ID               uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
+	ID               uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID           uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	OrderID          uuid.UUID      `gorm:"type:uuid" json:"order_id"`
 	TestKitID        uuid.UUID      `gorm:"type:uuid" json:"test_kit_id"`
@@ -230,10 +245,11 @@ type TestKitResult struct {
 	CreatedAt        time.Time      `json:"created_at"`
 	UpdatedAt        time.Time      `json:"updated_at"`
 	DeletedAt        gorm.DeletedAt `gorm:"index" json:"-"`
-	User             User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	Order            TestKitOrder   `gorm:"foreignKey:OrderID" json:"order,omitempty"`
-	TestKit          TestKit        `gorm:"foreignKey:TestKitID" json:"test_kit,omitempty"`
-	Reviewer         *User          `gorm:"foreignKey:ReviewedBy" json:"reviewer,omitempty"`
+	// Temporary: Relationships commented out to avoid migration issues
+	// User             User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	// Order            TestKitOrder   `gorm:"foreignKey:OrderID" json:"order,omitempty"`
+	// TestKit          TestKit        `gorm:"foreignKey:TestKitID" json:"test_kit,omitempty"`
+	// Reviewer         *User          `gorm:"foreignKey:ReviewedBy" json:"reviewer,omitempty"`
 }
 
 func (p *Prescription) BeforeCreate(tx *gorm.DB) error {
@@ -271,12 +287,7 @@ func (lr *LabResult) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (ha *HealthArticle) BeforeCreate(tx *gorm.DB) error {
-	if ha.ID == uuid.Nil {
-		ha.ID = uuid.New()
-	}
-	return nil
-}
+// BeforeCreate for HealthArticle is already defined above
 
 func (hq *HealthQuiz) BeforeCreate(tx *gorm.DB) error {
 	if hq.ID == uuid.Nil {
